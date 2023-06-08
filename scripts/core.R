@@ -88,14 +88,26 @@ map_sf2$idate <- 1 + map_sf2$date - min(map_sf2$date)
 
 #------- model fitting
 
-res <- inla(cases ~pop,
-            f(idate, model = 'iid') +
-              f(idarea1, model ='besag', graph = malawi_graph),
-            family = "poisson", Ntrials = n, data = map_sf2, verbose = T)
+res <- inla(cases ~ offset(log(pop))+
+              f(idate, model = 'iid') +
+              f(idarea, model ='besag', graph = malawi_graph, scale.model =  TRUE),
+            family = "poisson", data = map_sf2, verbose = TRUE,
+            control.compute=list(config = TRUE)
+            )
+
+#-------- Adding a categorical variable for modelling using INLA
+#Simulating data with only one class
+map_sf2$LC = 1
+map_sf2$LC = as.factor(map_sf2$LC)
+
+#------- model fitting
+
+res2 <- inla(cases ~ offset(log(pop))+ LC +
+              f(idate, model = 'iid') +
+              f(idarea, model ='besag', graph = malawi_graph, scale.model =  TRUE),
+            family = "poisson", data = map_sf2, verbose = TRUE,
+            control.compute=list(config = TRUE)
+)
 
 
-#----- INLA Keep on crashing
-
-#Error in f(idate, model = "iid") + f(idarea1, model = "besag", graph = malawi_graph) : 
- # non-numeric argument to binary operator
 
